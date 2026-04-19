@@ -32,7 +32,6 @@ npm run dev
 ```
 
 ## Credenciales de Acceso
-- **Admin**: `ajota1427` / `12345`
 - **User**: `user_1` / `12345`
 
 ## Notas para Linux

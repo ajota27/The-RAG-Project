@@ -38,9 +38,7 @@ npm install
 npm run dev
 ```
 
-## Credenciales por Defecto
-El sistema viene precargado con dos usuarios de prueba:
-- **Administrador**: `ajota1427` / `12345` (Puede subir documentos).
+El sistema viene con un usuario de prueba para demostración:
 - **Usuario Regular**: `user_1` / `12345` (Solo puede chatear).
 
 ## Estructura del Proyecto

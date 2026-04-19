@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import Login from './Login'
+import UserManagementModal from './UserManagementModal'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -11,6 +12,7 @@ function App() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [isUsersModalOpen, setIsUsersModalOpen] = useState(false)
   const messagesEndRef = useRef(null)
 
   // Cargar usuario desde localStorage al iniciar
@@ -199,12 +201,23 @@ function App() {
             <button className="logout-btn" onClick={handleLogout}>Salir</button>
           </div>
           <h2 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>RAG Pro</h2>
-          <button className="new-chat-btn" onClick={createNewChat}>
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Nuevo Chat
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+            <button className="new-chat-btn" onClick={createNewChat} style={{ flex: 1 }}>
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Chat
+            </button>
+            {user.role === 'admin' && (
+              <button 
+                className="new-chat-btn" 
+                onClick={() => setIsUsersModalOpen(true)}
+                style={{ flex: 1, background: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--border)' }}
+              >
+                Usuarios
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="list-container">
@@ -305,6 +318,13 @@ function App() {
           </form>
         </div>
       </main>
+      {/* Modal de Gestión de Usuarios */}
+      <UserManagementModal 
+        isOpen={isUsersModalOpen} 
+        onClose={() => setIsUsersModalOpen(false)}
+        currentUser={user}
+        getHeaders={getHeaders}
+      />
     </div>
   )
 }

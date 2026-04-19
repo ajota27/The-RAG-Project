@@ -61,6 +61,64 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     )
     return {"access_token": access_token, "token_type": "bearer", "role": user["role"], "username": user["username"]}
 
+# --- Endpoints de Gestión de Usuarios (Solo Admin) ---
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    role: str
+
+class UserUpdate(BaseModel):
+    username: str
+    password: Optional[str] = None
+    role: str
+
+@app.get("/users")
+async def list_all_users(current_user: dict = Depends(check_admin_role)):
+    from database import get_all_users
+    return get_all_users()
+
+@app.post("/users")
+async def create_new_user(user_data: UserCreate, current_user: dict = Depends(check_admin_role)):
+    from database import create_user_manual
+    try:
+        uid = create_user_manual(user_data.username, user_data.password, user_data.role)
+        return {"id": uid, "message": "Usuario creado"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="El nombre de usuario ya existe o hubo un error.")
+
+@app.put("/users/{user_id}")
+async def update_existing_user(user_id: str, user_data: UserUpdate, current_user: dict = Depends(check_admin_role)):
+    from database import get_user_by_id, update_user
+    target_user = get_user_by_id(user_id)
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # REGLA: Un admin no puede editar a otro admin (a menos que sea él mismo)
+    if target_user["role"] == "admin" and target_user["id"] != current_user["user_id"]:
+        raise HTTPException(status_code=403, detail="No tienes permisos para editar a otro administrador")
+    
+    update_user(user_id, user_data.username, user_data.password, user_data.role)
+    return {"message": "Usuario actualizado"}
+
+@app.delete("/users/{user_id}")
+async def remove_user(user_id: str, current_user: dict = Depends(check_admin_role)):
+    from database import get_user_by_id, delete_user
+    target_user = get_user_by_id(user_id)
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # REGLA: Solo se pueden borrar usuarios con rol 'user'
+    if target_user["role"] != "user":
+        raise HTTPException(status_code=403, detail="Solo se pueden eliminar usuarios con rol 'user'")
+    
+    # REGLA: No borrarse a sí mismo (ya cubierto por la regla anterior, pero por si acaso)
+    if target_user["id"] == current_user["user_id"]:
+        raise HTTPException(status_code=403, detail="No puedes eliminar tu propia cuenta")
+    
+    delete_user(user_id)
+    return {"message": "Usuario eliminado correctamente"}
+
 # --- Endpoints de Gestión de Documentos (Protegidos) ---
 
 @app.get("/documents")
